@@ -1,5 +1,5 @@
 import socket
-from sympy.solvers import solve
+from sympy import solve
 
 def eq_verify(eq):
     #for caractere in eq:  
@@ -47,7 +47,7 @@ def client_main_server():
         print('Resultado: ' + resposta)  # mostra o resultado no terminal
     else:
         eq = client_socket.recv(1024).decode()
-        sol = solve(eq)
+        sol = solve(eq+" - x")
         num = str(sol)
         client_socket.send(num.encode())
     
