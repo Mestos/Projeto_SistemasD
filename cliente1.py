@@ -1,14 +1,17 @@
 import socket
-from sympy import solve
+from sympy.solvers import solve
+from sympy import sympify
+from sympy.core.sympify import SympifyError
 
 def eq_verify(eq):
-    #for caractere in eq:  
-    #    if caractere.isalpha():
-    #        return False
-    return True
+    try:
+        sympify(eq)
+        return True
+    except SympifyError:
+        return False
 
 def client_main_server():
-    host = socket.gethostname()  # ip do servidor
+    host = '127.0.0.1'  # localhost
     port = 5000  # porta do socket
 
     client_socket = socket.socket()  # instantiate
@@ -34,18 +37,18 @@ def client_main_server():
         print('Received from server: ' + data)  # mostra a mensagem no terminal
         
     if tipo == "1":
-        eq = input("---")   
-        
+        eq=""
         while True:
+            print("Digite a equação (ex: x**2 - 4 = 0 ou 3**4 + 6):")
+            eq = input("--->")  
             if eq_verify(eq):
-                break      
-            else:
-                eq = input("---")   
+                break   
                 
         client_socket.send(eq.encode())  # envia mensagem contendo uma equação
         resposta = client_socket.recv(1024).decode()
         print('Resultado: ' + resposta)  # mostra o resultado no terminal
     else:
+        client_socket.send(" ".encode())
         eq = client_socket.recv(1024).decode()
         sol = solve(eq+" - x")
         num = str(sol)
