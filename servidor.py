@@ -28,7 +28,7 @@ def handle_client(conn, addr):
                 # Espera uma equação de um receptor
                 continue
             except:
-                break
+               break
 
     elif tipo == "1":
         with lock:
