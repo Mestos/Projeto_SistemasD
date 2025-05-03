@@ -39,12 +39,22 @@ def handle_client(conn, addr):
         # Envia para o primeiro provedor disponível
         with lock:
             if clientes_provedores:
-                provedor = clientes_provedores.pop(0)
-                provedor.send(eq.encode())
-                resposta = provedor.recv(1024).decode()
-                conn.send(resposta.encode())
-                # Devolve o provedor para a lista
-                clientes_provedores.append(provedor)
+                while True:
+                    try:
+                        # Envia a equação para o provedor
+                        provedor = clientes_provedores.pop(0)
+                        provedor.send(eq.encode())
+                        resposta = provedor.recv(1024).decode()
+                        conn.send(resposta.encode())
+                        # Devolve o provedor para a lista
+                        clientes_provedores.append(provedor)
+                        break
+                    except BrokenPipeError:
+                        print("Conexão fechada pelo outro lado (BrokenPipeError).")
+                    except ConnectionResetError:
+                        print("Conexão fechada pelo outro lado (ConnectionResetError).")
+                    except Exception as e:
+                        print(f"Erro ao enviar dados: {e}")
             else:
                 conn.send("Nenhum provedor disponível no momento.".encode())
 
