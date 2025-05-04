@@ -49,12 +49,15 @@ def client_main_server():
     else:
         while True:          
             if keyboard.read_key() == 'p':
-                    break
-        
-            eq = client_socket.recv(1024).decode()
-            sol = solve(eq+" - x")
-            num = str(sol)
-            client_socket.send(num.encode())
+                break
+            else:
+                eq = client_socket.recv(1024).decode()
+                if eq == "0":
+                    client_socket.send("0".encode())
+                    continue
+                sol = solve(eq+" - x")
+                num = str(sol)
+                client_socket.send(num.encode())
                 
     
     client_socket.close()  # fecha conexão com o servidor principal       

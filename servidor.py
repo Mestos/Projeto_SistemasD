@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 clientes_provedores = []
 clientes_receptores = []
@@ -23,12 +24,24 @@ def handle_client(conn, addr):
             clientes_provedores.append(conn)
         print(f"Provedor conectado: {addr}")
 
-        while True:
-            try:
+        while True:                             #Checagem de conexão
+            try:                                
+                conn.send("0".encode())         #Mensagem para checar conexão
                 # Espera uma equação de um receptor
-                continue
-            except:
-               break
+                r = conn.recv(1024).decode()    #Confirmação do provedor
+                if r == "0":                    #Provedor confirma que a conexão ainda está ativa
+                    time.sleep(5.5)             #Tempo de espera entre o envio das mensagens de confirmação
+                    continue
+                else:
+                    print("Mensagem irregular\n")
+                    break
+            except ConnectionResetError:        #Conexão foi fechada pelo provedor
+                    print("Conexão fechada pelo outro lado (ConnectionResetError).")
+                    break
+            except Exception as e: 
+                print(f"Thread do provedor: {e} \n")
+                break
+        clientes_provedores.remove(conn)        #Remoção do provedor da lista assim que a conexão acaba
 
     elif tipo == "1":
         with lock:
@@ -51,13 +64,17 @@ def handle_client(conn, addr):
                         break
                     except BrokenPipeError:
                         print("Conexão fechada pelo outro lado (BrokenPipeError).")
+                        break
                     except ConnectionResetError:
                         print("Conexão fechada pelo outro lado (ConnectionResetError).")
+                        break
                     except Exception as e:
                         print(f"Erro ao enviar dados: {e}")
+                        break
             else:
                 conn.send("Nenhum provedor disponível no momento.".encode())
-
+                
+    print(f"Conexão com {addr} Fechada \n") 
     conn.close()
 
 

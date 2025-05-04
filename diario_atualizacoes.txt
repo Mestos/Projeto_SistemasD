@@ -1,0 +1,3 @@
+04/05 - Alexandre: Fiz uma checagem de conexão na thread provedor/servidor.Até achar colocar algo melhor, 
+estabeleci um intervalo de tempo entre as mensagens de checagem de conexão na thread provedor/servidor para diminuir as 
+chances de concorrência entre as threads quando forem enviar algo para o provedor ou algo mais.
