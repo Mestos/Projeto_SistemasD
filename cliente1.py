@@ -48,13 +48,14 @@ def client_main_server():
         print('Resultado: ' + resposta)  # mostra o resultado no terminal
     else:
         while True:          
+            eq = client_socket.recv(1024).decode()
             if keyboard.read_key() == 'p':
+                client_socket.send("f".encode())
                 break
+            elif eq == "c":
+                client_socket.send("c".encode())
+                continue
             else:
-                eq = client_socket.recv(1024).decode()
-                if eq == "0":
-                    client_socket.send("0".encode())
-                    continue
                 sol = solve(eq+" - x")
                 num = str(sol)
                 client_socket.send(num.encode())

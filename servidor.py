@@ -26,14 +26,14 @@ def handle_client(conn, addr):
 
         while True:                             #Checagem de conexão
             try:                                
-                conn.send("0".encode())         #Mensagem para checar conexão
+                conn.send("c".encode())         #Mensagem para checar conexão
                 # Espera uma equação de um receptor
                 r = conn.recv(1024).decode()    #Confirmação do provedor
-                if r == "0":                    #Provedor confirma que a conexão ainda está ativa
+                if r == "c":                    #Provedor confirma que a conexão ainda está ativa
                     time.sleep(5.5)             #Tempo de espera entre o envio das mensagens de confirmação
                     continue
                 else:
-                    print("Mensagem irregular\n")
+                    print("Fechando conexão com provedor...\n")
                     break
             except ConnectionResetError:        #Conexão foi fechada pelo provedor
                     print("Conexão fechada pelo outro lado (ConnectionResetError).")
