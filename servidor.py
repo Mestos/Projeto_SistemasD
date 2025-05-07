@@ -7,6 +7,38 @@ clientes_receptores = []
 
 lock = threading.Lock()
 
+def pos_menor_precedencia(expr):
+    operadores_niveis = [
+        ['+', '-'],        # Menor precedência
+        ['*', '/', '//', '%'],
+        ['**']             # Maior precedência
+    ]
+
+    # Função auxiliar para verificar se estamos fora de parênteses
+    def fora_dos_parenteses(i):
+        count = 0
+        for j in range(i):
+            if expr[j] == '(':
+                count += 1
+            elif expr[j] == ')':
+                count -= 1
+        return count == 0
+
+    # Procurar do menor para o maior nível de precedência
+    for operadores in operadores_niveis:
+        i = len(expr) - 1
+        while i >= 0:
+            if not fora_dos_parenteses(i):
+                i -= 1
+                continue
+            # Verifica operadores de 2 caracteres (como // e **)
+            if i > 0 and expr[i-1:i+1] in operadores and fora_dos_parenteses(i-1):
+                return i - 1
+            elif expr[i] in operadores:
+                return i
+            i -= 1
+    return -1  # Nenhum operador encontrado fora dos parênteses
+
 def handle_client(conn, addr):
     print(f"Conexão de {addr}")
     conn.send("Você é provedor (0) ou receptor (1)?".encode())
@@ -51,16 +83,17 @@ def handle_client(conn, addr):
 
         # Envia para o primeiro provedor disponível
         with lock:
-            if clientes_provedores:
-                while True:
+            n=len(clientes_provedores)
+            
+        if n>1:   
+            centro=pos_menor_precedencia(eq) #Verifica a posição do operador de menor precedência
+            começo=eq[:centro] #Parte da equação antes do operador
+            fim=eq[centro:]
+            while True:
                     try:
                         # Envia a equação para o provedor
-                        provedor = clientes_provedores.pop(0)
-                        provedor.send(eq.encode())
-                        resposta = provedor.recv(1024).decode()
-                        conn.send(resposta.encode())
-                        # Devolve o provedor para a lista
-                        clientes_provedores.append(provedor)
+                        provedor1 = clientes_provedores.pop(0)
+                        provedor1.send(começo.encode())
                         break
                     except BrokenPipeError:
                         print("Conexão fechada pelo outro lado (BrokenPipeError).")
@@ -71,9 +104,60 @@ def handle_client(conn, addr):
                     except Exception as e:
                         print(f"Erro ao enviar dados: {e}")
                         break
-            else:
-                conn.send("Nenhum provedor disponível no momento.".encode())
-                
+            while True:
+                    try:
+                        # Envia a equação para o provedor
+                        provedor2 = clientes_provedores.pop(0)
+                        provedor2.send(fim.encode())
+                        break
+                    except BrokenPipeError:
+                        print("Conexão fechada pelo outro lado (BrokenPipeError).")
+                        break
+                    except ConnectionResetError:
+                        print("Conexão fechada pelo outro lado (ConnectionResetError).")
+                        break
+                    except Exception as e:
+                        print(f"Erro ao enviar dados: {e}")
+                        break
+            resposta1 = provedor1.recv(1024).decode()
+            resposta2 = provedor2.recv(1024).decode()
+            if eq[centro] == "*" and eq[centro+1] == "*":
+                resposta = str(float(resposta1) ** float(resposta2))
+            elif eq[centro] == "/":
+                resposta = str(float(resposta1) / float(resposta2))
+            elif eq[centro] == "+": 
+                resposta = str(float(resposta1) + float(resposta2))
+            elif eq[centro] == "-":
+                resposta = str(float(resposta1) - float(resposta2))
+            elif eq[centro] == "*":
+                resposta = str(float(resposta1) * float(resposta2))
+            
+            conn.send(resposta.encode())
+            with lock:
+                clientes_provedores.append(provedor1)
+                clientes_provedores.append(provedor2)
+        else:
+            with lock:
+                provedor = clientes_provedores.pop(0)
+                while True:
+                    try:
+                        # Envia a equação para o provedor
+                        provedor.send(eq.encode())
+                        break
+                    except BrokenPipeError:
+                        print("Conexão fechada pelo outro lado (BrokenPipeError).")
+                        break
+                    except ConnectionResetError:
+                        print("Conexão fechada pelo outro lado (ConnectionResetError).")
+                        break
+                    except Exception as e:
+                        print(f"Erro ao enviar dados: {e}")
+                        break
+
+            resposta = provedor.recv(1024).decode()
+            conn.send(resposta.encode())
+            with lock:
+                clientes_provedores.append(provedor)
     print(f"Conexão com {addr} Fechada \n") 
     conn.close()
 

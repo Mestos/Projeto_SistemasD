@@ -38,7 +38,7 @@ def client_main_server():
 
     if tipo == "1":
         while True:
-            print("Digite a equação (ex: 2**2 - 4 = 0 ou 3**4 + 6):")
+            print("Digite a equação (ex: 2**2 - 4  ou 8/4 + 6):")
             eq = input("--->")
             if eq_verify(eq):
                 break
@@ -56,7 +56,7 @@ def client_main_server():
                 client_socket.send("c".encode())
                 continue
             else:
-                sol = solve(eq+" - x")
+                sol = solve(eq+" - x")[0]
                 num = str(sol)
                 client_socket.send(num.encode())
                 
