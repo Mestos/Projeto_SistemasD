@@ -85,10 +85,16 @@ def handle_client(conn, addr):
         with lock:
             n=len(clientes_provedores)
             
-        if n>1:   
-            centro=pos_menor_precedencia(eq) #Verifica a posição do operador de menor precedência
-            começo=eq[:centro] #Parte da equação antes do operador
-            fim=eq[centro:]
+        if n>1:
+            centro = pos_menor_precedencia(eq)  # Posição do operador de menor precedência   
+            começo = eq[:centro]            # Parte antes do operador
+            operador = ''
+            if eq[centro:centro+2] in ['**']:  # Operadores de 2 caracteres
+                operador = eq[centro:centro+2]
+                fim = eq[centro+2:]          # Parte depois do operador
+            else:
+                operador = eq[centro]
+                fim = eq[centro+1:]          # Parte depois do operador
             while True:
                     try:
                         # Envia a equação para o provedor
@@ -121,15 +127,15 @@ def handle_client(conn, addr):
                         break
             resposta1 = provedor1.recv(1024).decode()
             resposta2 = provedor2.recv(1024).decode()
-            if eq[centro] == "*" and eq[centro+1] == "*":
+            if operador=="**":
                 resposta = str(float(resposta1) ** float(resposta2))
-            elif eq[centro] == "/":
+            elif operador == "/":
                 resposta = str(float(resposta1) / float(resposta2))
-            elif eq[centro] == "+": 
+            elif operador == "+": 
                 resposta = str(float(resposta1) + float(resposta2))
-            elif eq[centro] == "-":
+            elif operador == "-":
                 resposta = str(float(resposta1) - float(resposta2))
-            elif eq[centro] == "*":
+            elif operador == "*":
                 resposta = str(float(resposta1) * float(resposta2))
             
             conn.send(resposta.encode())
